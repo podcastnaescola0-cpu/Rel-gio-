@@ -1,0 +1,146 @@
+<!DOCTYPE html <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Radio Player</title>
+    <style>
+        :root {
+            --primary: #6200ee;
+            --bg: #121212;2#42445A
+            --surface: #1e1e1e;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .player-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 320px;
+            text-align: center;
+        }
+
+        .station-info h2 { margin: 0; color: var(--primary); }
+        .station-info p { opacity: 0.7; font-size: 0.9rem; }
+
+        .controls { margin: 20px 0; }
+
+        button {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        button:active { transform: scale(0.95); }
+
+        .volume-slider {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .playlist {
+            margin-top: 20px;
+            text-align: left;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
+        .playlist-item {
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .playlist-item:hover { background: #333; }
+        .active-station { color: var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="player-card">
+    <div class="station-info">
+        <h2 id="current-name">Rádio Relax</h2>
+        <p id="current-status">Pronto para tocar</p>
+    </div>
+
+    <div class="controls">
+        <audio id="audio-player" src="https://icecast.radiofrance.fr/fip-midfi.mp3"></audio>
+        <button id="play-btn" onclick="togglePlay()">PLAY</button>
+    </div>
+
+    <input type="range" class="volume-slider" min="0" max="1" step="0.1" value="0.5" oninput="setVolume(this.value)">
+    
+    <div class="playlist" id="playlist">
+        </div>
+</div>
+
+<script>
+    const player = document.getElementById('audio-player');
+    const playBtn = document.getElementById('play-btn');
+    const statusTxt = document.getElementById('current-status');
+
+    const stations = [
+        { name: "FIP Radio (Jazz/Mix)", url: "https://icecast.radiofrance.fr/fip-midfi.mp3" },
+        { name: "SomaFM (Lounge)", url: "https://icecast.somafm.com/groovesalad-128-mp3" },
+        { name: "BBC World Service", url: "https://stream.live.vc.bbc.co.uk/bbc_world_service" }
+    ];
+
+    function initPlaylist() {
+        const container = document.getElementById('playlist');
+        stations.forEach((s, index) => {
+            const div = document.createElement('div');
+            div.className = 'playlist-item';
+            div.innerText = s.name;
+            div.onclick = () => changeStation(index);
+            container.appendChild(div);
+        });
+    }
+
+    function togglePlay() {
+        if (player.paused) {
+            player.play();
+            playBtn.innerText = "PAUSE";
+            statusTxt.innerText = "Transmitindo ao vivo...";
+        } else {
+            player.pause();
+            playBtn.innerText = "PLAY";
+            statusTxt.innerText = "Pausado";
+        }
+    }
+
+    function changeStation(index) {
+        const station = stations[index];
+        player.src = station.url;
+        document.getElementById('current-name').innerText = station.name;
+        player.play();
+        playBtn.innerText = "PAUSE";
+        statusTxt.innerText = "Conectando...";
+    }
+
+    function setVolume(val) {
+        player.volume = val;
+    }
+
+    initPlaylist();
+</script>
+
+</body>
+</html>

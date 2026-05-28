@@ -1,146 +1,320 @@
-<!DOCTYPE html <!DOCTYPE html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Radio Player</title>
+    <title>Relógio Retrô & Alarme</title>
     <style>
-        :root {
-            --primary: #6200ee;
-            --bg: #121212;2#42445A
-            --surface: #1e1e1e;
-            --text: #ffffff;
+        /* Fonte estilo display digital clássico */
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: #121212;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
+            font-family: 'Share Tech Mono', monospace;
+            padding: 15px;
         }
 
-        .player-card {
-            background: var(--surface);
-            padding: 2rem;
+        /* Estrutura do Rádio-Relógio Antigo */
+        .retro-clock-box {
+            background: linear-gradient(135deg, #2d2d2d, #090909);
+            padding: 30px 25px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 320px;
+            border: 5px solid #3a3a3a;
+            box-shadow: 
+                0 0 0 2px #555,
+                0 25px 60px rgba(0, 0, 0, 0.85),
+                inset 0 0 25px rgba(0, 0, 0, 0.7);
             text-align: center;
-        }
-
-        .station-info h2 { margin: 0; color: var(--primary); }
-        .station-info p { opacity: 0.7; font-size: 0.9rem; }
-
-        .controls { margin: 20px 0; }
-
-        button {
-            background: var(--primary);
-            border: none;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-
-        button:active { transform: scale(0.95); }
-
-        .volume-slider {
             width: 100%;
-            margin-top: 20px;
+            max-width: 440px;
         }
 
-        .playlist {
-            margin-top: 20px;
-            text-align: left;
-            border-top: 1px solid #333;
-            padding-top: 10px;
+        /* Tela de LED Embutida */
+        .led-screen {
+            background-color: #030303;
+            padding: 25px 15px;
+            border-radius: 10px;
+            border: 3px solid #1a1a1a;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            position: relative;
+            margin-bottom: 20px;
         }
 
-        .playlist-item {
+        /* Efeito de linhas físicas de TVs e Displays antigos (CRT Scanlines) */
+        .led-screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+            z-index: 2;
+            background-size: 100% 4px;
+            pointer-events: none;
+            border-radius: 7px;
+        }
+
+        /* Horas e Minutos (Verde Neon) */
+        .time-display {
+            color: #00ff6c;
+            font-size: clamp(3.2rem, 15vw, 5.8rem);
+            text-shadow: 0 0 20px rgba(0, 255, 108, 0.6);
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        /* Segundos Menores na lateral */
+        .seconds-display {
+            color: #00ff6c;
+            font-size: clamp(1.4rem, 6vw, 2.3rem);
+            text-shadow: 0 0 15px rgba(0, 255, 108, 0.6);
+            margin-left: 8px;
+            min-width: 2ch;
+        }
+
+        /* Exibição da Data */
+        .date-display {
+            color: #00a344;
+            font-size: clamp(0.9rem, 4vw, 1.1rem);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 8px rgba(0, 163, 68, 0.3);
+        }
+
+        /* Painel de Controle do Alarme */
+        .alarm-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #252525;
+            border-radius: 10px;
+            padding: 20px 15px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .alarm-panel h3 {
+            color: #ff9900;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(255, 153, 0, 0.3);
+        }
+
+        /* Alinhamento dos controles para Mobile */
+        .alarm-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* Quando a tela for um pouco maior, os botões ficam lado a lado */
+        @media (min-width: 360px) {
+            .alarm-controls {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        /* Input de Escolher a Hora */
+        input[type="time"] {
+            background-color: #151515;
+            border: 2px solid #3e3e3e;
+            color: #ff9900;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.4rem;
             padding: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background 0.2s;
+            border-radius: 6px;
+            outline: none;
+            text-align: center;
+            flex: 1;
         }
 
-        .playlist-item:hover { background: #333; }
-        .active-station { color: var(--primary); font-weight: bold; }
+        /* Customização do ícone de relógio nativo do mobile */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.6) sepia(1) saturate(5) hue-rotate(15deg);
+        }
+
+        /* Botões Estilo Aparelho de Som Antigo */
+        button {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            transition: all 0.1s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-on {
+            background: linear-gradient(#d48300, #8a5500);
+            color: #fff;
+            box-shadow: 0 4px 0 #573500, 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .btn-off {
+            background: linear-gradient(#dc3545, #9c1c28);
+            color: #fff;
+            box-shadow: 0 4px 0 #611018, 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Texto de Status do Alarme */
+        .alarm-status-text {
+            color: #777;
+            font-size: 0.95rem;
+            min-height: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Efeito piscante vermelho quando o alarme dispara */
+        .alarm-triggering {
+            color: #ff3333 !important;
+            text-shadow: 0 0 10px #ff3333;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-<div class="player-card">
-    <div class="station-info">
-        <h2 id="current-name">Rádio Relax</h2>
-        <p id="current-status">Pronto para tocar</p>
-    </div>
-
-    <div class="controls">
-        <audio id="audio-player" src="https://icecast.radiofrance.fr/fip-midfi.mp3"></audio>
-        <button id="play-btn" onclick="togglePlay()">PLAY</button>
-    </div>
-
-    <input type="range" class="volume-slider" min="0" max="1" step="0.1" value="0.5" oninput="setVolume(this.value)">
-    
-    <div class="playlist" id="playlist">
+    <div class="retro-clock-box">
+        <div class="led-screen">
+            <div class="time-display" id="clock-time">00:00</div>
+            <div class="seconds-display" id="clock-seconds">00</div>
         </div>
-</div>
+        
+        <div class="date-display" id="clock-date">-- --- ----</div>
 
-<script>
-    const player = document.getElementById('audio-player');
-    const playBtn = document.getElementById('play-btn');
-    const statusTxt = document.getElementById('current-status');
+        <div class="alarm-panel">
+            <h3>Alarme</h3>
+            <div class="alarm-controls">
+                <input type="time" id="alarm-time" oninput="initAudioContext()">
+                <button class="btn-on" onclick="setAlarm()">Ligar</button>
+                <button class="btn-off" onclick="clearAlarm()">Desligar</button>
+            </div>
+            <div class="alarm-status-text" id="alarm-status">Nenhum alarme programado</div>
+        </div>
+    </div>
 
-    const stations = [
-        { name: "FIP Radio (Jazz/Mix)", url: "https://icecast.radiofrance.fr/fip-midfi.mp3" },
-        { name: "SomaFM (Lounge)", url: "https://icecast.somafm.com/groovesalad-128-mp3" },
-        { name: "BBC World Service", url: "https://stream.live.vc.bbc.co.uk/bbc_world_service" }
-    ];
+    <script>
+        let alarmTime = null;
+        let audioContext = null;
+        let alarmInterval = null;
 
-    function initPlaylist() {
-        const container = document.getElementById('playlist');
-        stations.forEach((s, index) => {
-            const div = document.createElement('div');
-            div.className = 'playlist-item';
-            div.innerText = s.name;
-            div.onclick = () => changeStation(index);
-            container.appendChild(div);
-        });
-    }
-
-    function togglePlay() {
-        if (player.paused) {
-            player.play();
-            playBtn.innerText = "PAUSE";
-            statusTxt.innerText = "Transmitindo ao vivo...";
-        } else {
-            player.pause();
-            playBtn.innerText = "PLAY";
-            statusTxt.innerText = "Pausado";
+        // Ativa o motor de áudio interno do navegador de forma invisível
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
         }
-    }
 
-    function changeStation(index) {
-        const station = stations[index];
-        player.src = station.url;
-        document.getElementById('current-name').innerText = station.name;
-        player.play();
-        playBtn.innerText = "PAUSE";
-        statusTxt.innerText = "Conectando...";
-    }
+        // Sintetizador interno para criar o som "BEEP-BEEP" retrô sem precisar de arquivos externos
+        function playRetroBeep() {
+            if (!audioContext) return;
+            
+            let oscillator = audioContext.createOscillator();
+            let gainNode = audioContext.createGain();
+            
+            oscillator.type = 'square'; // Tipo de onda quadrada (estilo som de Nintendinho/Relógio antigo)
+            oscillator.frequency.setValueAtTime(850, audioContext.currentTime); // Tom do bipe
+            
+            gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.12);
+        }
 
-    function setVolume(val) {
-        player.volume = val;
-    }
+        // Atualização do Relógio em Tempo Real
+        function updateClock() {
+            const now = new Date();
+            
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            let seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('clock-time').textContent = `${hours}:${minutes}`;
+            document.getElementById('clock-seconds').textContent = seconds;
+            
+            const options = { day: '2-digit', month: 'short', year: 'numeric' };
+            let dateString = now.toLocaleDateString('pt-BR', options).replace('.', '');
+            document.getElementById('clock-date').textContent = dateString;
 
-    initPlaylist();
-</script>
+            // Se bater o horário exato configurado (no segundo 00), toca!
+            if (alarmTime === `${hours}:${minutes}` && seconds === "00") {
+                triggerAlarm();
+            }
+        }
 
+        // Liga o Alarme
+        function setAlarm() {
+            initAudioContext(); // Garante permissão de som com o clique do botão
+
+            const inputTime = document.getElementById('alarm-time').value;
+            if (!inputTime) {
+                alert("Escolha um horário primeiro!");
+                return;
+            }
+            
+            alarmTime = inputTime;
+            document.getElementById('alarm-status').textContent = `⏰ Programado para às ${alarmTime}`;
+            document.getElementById('alarm-status').classList.remove('alarm-triggering');
+        }
+
+        // Desliga o Alarme
+        function clearAlarm() {
+            alarmTime = null;
+            document.getElementById('alarm-status').textContent = "Nenhum alarme programado";
+            document.getElementById('alarm-status').classList.remove('alarm-triggering');
+            
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+        }
+
+        // Dispara a rotina visual e sonora do alarme acordando o usuário
+        function triggerAlarm() {
+            document.getElementById('alarm-status').textContent = "⏰ HORA DE ACORDAR!";
+            document.getElementById('alarm-status').classList.add('alarm-triggering');
+            
+            // Fica repetindo o bipe a cada meio segundo
+            if (!alarmInterval) {
+                alarmInterval = setInterval(() => {
+                    playRetroBeep();
+                }, 500);
+            }
+        }
+
+        // Loop principal do relógio
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </body>
 </html>
